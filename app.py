@@ -26,10 +26,22 @@ st.title('Stock Replenishment Calculator')
 
 uploaded_file = st.file_uploader('Upload your stock Excel file', type=['xlsx'])
 
-if uploaded_file:
-    df = pd.read_excel(uploaded_file)
-    result_df = calculate_replenishment_order(df)
-    st.write('Replenishment Report:')
-    st.dataframe(result_df)
-    output = result_df.to_excel(index=False)
-    st.download_button(label='Download Report as Excel', data=output, file_name='replenishment_report.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+import streamlit as st
+import pandas as pd
+import io
+
+def calculate_replenishment_order(df):
+    df.columns = df.columns.str.strip()
+    months = ['06/24', '07/24', '08/24', '09/24', '10/24', '11/24', '12/24', '01/25', '02/25', '03/25', '04/25']
+    df['current_stock'] = df['ONHAND'] + df['CURRENT']
+    monthly_sales = df[months]
+    sum_top3_sales = monthly_sales.apply(lambda row: row.nlargest(3).sum(), axis=1)
+    sum_top6_sales = monthly_sales.apply(lambda row: row.nlargest(6).sum(), axis=1)
+    def round_to_nearest_50(x):
+        return int(round(x / 50) * 50)
+    new_order = []
+    for idx, row in df.iterrows():
+        if row['current_stock'] >= sum_top6_sales[idx]:
+            new_order.append(0)
+        else:
+            new_order.append(round_to_nearest_50(sum_top3_sale

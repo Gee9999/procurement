@@ -1,11 +1,7 @@
-import streamlit as st
-import pandas as pd
-import io
-
 def calculate_replenishment_order(df):
     df.columns = df.columns.str.strip()
     months = ['06/24', '07/24', '08/24', '09/24', '10/24', '11/24', '12/24', '01/25', '02/25', '03/25', '04/25']
-    df['current_stock'] = df['ONHAND'] + df['CURRENT']
+    df['current_stock'] = df['ONHAND']  # Use ONHAND only as current stock
     monthly_sales = df[months]
     sum_top3_sales = monthly_sales.apply(lambda row: row.nlargest(3).sum(), axis=1)
     sum_top6_sales = monthly_sales.apply(lambda row: row.nlargest(6).sum(), axis=1)
@@ -22,26 +18,3 @@ def calculate_replenishment_order(df):
     report_df['sum_top6_sales'] = sum_top6_sales
     report_df['new_order'] = new_order
     return report_df
-
-st.title('Stock Replenishment Calculator')
-
-uploaded_file = st.file_uploader('Upload your stock Excel file', type=['xlsx'])
-
-if uploaded_file:
-    df = pd.read_excel(uploaded_file)
-    result_df = calculate_replenishment_order(df)
-    st.write('Replenishment Report:')
-    st.dataframe(result_df)
-
-    # Create a BytesIO buffer to save Excel file in memory
-    output_buffer = io.BytesIO()
-    with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
-        result_df.to_excel(writer, index=False)
-    output_buffer.seek(0)
-
-    st.download_button(
-        label='Download Report as Excel',
-        data=output_buffer,
-        file_name='replenishment_report.xlsx',
-        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )

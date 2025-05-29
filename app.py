@@ -6,14 +6,13 @@ def calculate_replenishment_order(df):
     df.columns = df.columns.str.strip()
     months = ['06/24', '07/24', '08/24', '09/24', '10/24', '11/24', '12/24', '01/25', '02/25', '03/25', '04/25']
 
-    # Ensure 'In warehouse' column exists and convert to numeric, fill NaN with 0
     if 'In warehouse' not in df.columns:
         st.error("Column 'In warehouse' not found in the uploaded file.")
         return None
     df['In warehouse'] = pd.to_numeric(df['In warehouse'], errors='coerce').fillna(0)
+    df['ONHAND'] = pd.to_numeric(df['ONHAND'], errors='coerce').fillna(0)
 
-    # Calculate total available stock = ONHAND + In warehouse
-    df['total_stock'] = pd.to_numeric(df['ONHAND'], errors='coerce').fillna(0) + df['In warehouse']
+    df['total_stock'] = df['ONHAND'] + df['In warehouse']
 
     monthly_sales = df[months].apply(pd.to_numeric, errors='coerce').fillna(0)
 
